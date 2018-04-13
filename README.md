@@ -79,6 +79,7 @@ Se necesitara la librería PanamaHitek_arduino-3.0.0.jar que se anexara en los a
 Contacto.
 --------------
 Autora: Ana Evelia Hernández Aguirre.
+
 Correo electrónico: anitaxtm@hotmail.com
 
 
