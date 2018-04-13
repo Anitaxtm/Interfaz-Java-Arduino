@@ -1,0 +1,182 @@
+// a continuacion se define el pakete donde se encuantra la clase.
+package serial.arduino;
+
+/* a continuacion se colocan las importaciones necesarias que se ocuparan en esta clase para
+utilizar los diferentes librerias o componentes.*/
+import com.panamahitek.ArduinoException;
+import com.panamahitek.PanamaHitek_Arduino;
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import jssc.SerialPortException;
+
+/*a continuacion se define la clase en la que contendra el codigo necesario para crear la interfaz
+y su funcionalidad. Se le da la funcion de JFrame con el "extends JFrame" */
+public class Temperatura extends JFrame {
+    //a continuacion se crea la instancia ino para la utilizacion de la libreria panamaHitek_Arduino.
+    PanamaHitek_Arduino ino =new PanamaHitek_Arduino();
+    /*a continuacion se crean los JLabes, JButton y JPanel que se utilizaran en la interfaz para que el usuario
+    interactue con ellos. Asi como tambien el Container para colocar cada componente*/
+    private JLabel texto1;
+    private JButton enviar;
+    Container contenedor;
+    JPanel panel1,panel2;
+    
+     /* a continuacion se crea el JMenuBar, JMenuItem y el JMenu, necesarios para el menu en el cual
+    el usuario navegara a los diferentes Frames*/
+    private JMenuBar mb;
+    private JMenuItem mi1,mi2,mi3,mi4;
+    private JMenu inicio;
+    
+    /* a continuacion se crea el constructor donde tendra todos los componentes creados anteriormente ya inicializados
+    para que se muestren en la interfaz.*/
+    public Temperatura(){
+        /*a continuacion se muestra la linea de codigo en la cual se envia un mensaje que se mostrara en la parte
+         superior de la interfaz.*/
+        super("Temperatura y Humedad");
+        /* a continuacion se inicializan los componentes JPanel, JLabel, JButton, JMenuBar, JMenuItem, JMenu
+        y el Container con sus respectivos nombres ya colocados anteriormente y su funcionalidad.
+         con el ".add" se agregan los componentes ya sea al menu, al contenedor o al JPanel y al final todo se
+        agrega el contenedor*/
+        setLayout (new FlowLayout());
+        contenedor = getContentPane();
+        panel1= new JPanel();
+        panel2 = new JPanel();
+        
+        mb=new JMenuBar();
+        setJMenuBar(mb);
+        
+        inicio = new JMenu("Menu Opciones");
+        mb.add(inicio);
+        
+        mi1=new JMenuItem("Inicio");
+        inicio.add(mi1);
+        mi2=new JMenuItem("Temperatura y Humedad");
+        inicio.add(mi2);
+        mi3=new JMenuItem("Fecha y Hora");
+        inicio.add(mi3);
+        mi4=new JMenuItem("Mensajes");
+        inicio.add(mi4);
+        
+        texto1 = new JLabel("Al dar clic en el boton se mostrara en el LCD la temperatura y la humedad ");
+        panel1.add(texto1);
+        
+        enviar = new JButton("Temperatura y Humedad");
+        panel2.add(enviar);
+        
+        contenedor.add(panel1,BorderLayout.CENTER);
+        contenedor.add(panel2,BorderLayout.CENTER);
+        
+        /* a continuacion se muestra la conexion para la comunicacion con arduino con su respectivo puerto, utilizando la libreria
+        panamaHitek_Arduino*/
+        try {
+            ino.arduinoTX("COM4",9600);
+        } catch (ArduinoException ex) {
+            Logger.getLogger(Inicio.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(null,"No se encontro ningun puerto de arduino conectado");
+        }
+        
+        /* a continuacion se crea una instancia de la clase que se encuentra mas adelante "Registro_m" en el cual
+         se hara la funcion del ActionListener para el funcionamiento de la interfaz*/
+        Registro_m manejador = new Registro_m();
+        // a continuacion se muestra la agregacion del ActionListener a el JButton y los submenus del Menu.
+        enviar.addActionListener(manejador);
+        mi1.addActionListener(manejador);
+        mi2.addActionListener(manejador);
+        mi3.addActionListener(manejador);
+        mi4.addActionListener(manejador);
+    }
+    
+     /* a continuacion se muestra el metodo "Enviardatos" que recibira un parametro para asi poder enviar los
+    datos a el codigo de arduino*/
+    private void EnviarDatos(String data) {
+ 
+        // a continuacion utiliazando  la instancia de la libreria de conexion java-arduino se envian los obtenidos.
+        try {
+            ino.sendData(data);
+        } catch (ArduinoException ex) {
+            Logger.getLogger(SerialArduino.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SerialPortException ex) {
+            Logger.getLogger(SerialArduino.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    //a continuacion se muestra el metodo "CerrarPuerto" que su funcion es cerrara la conexion de arduino que se esta utilizando.
+    private void CerrarPuerto(){
+        /* a continuacion utiliazando  la instancia de la libreria de conexion java-arduino se cerrara la conexion de
+        arduino que se esta utilizando*/
+        try {
+            ino.killArduinoConnection();
+        } catch (ArduinoException ex) {
+            Logger.getLogger(SerialArduino.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    /* a continuacion se muestra la clase "Registro_m" que su funcion es verificar que boton o tecla se presiono y ejecutar
+    las instrucciones necesarias para cada caso, haciendo todo esto con los metodos implementados.*/
+    private class Registro_m  implements ActionListener{
+
+        /* a continuacion se muestra el metodo implementado para actionPerformed para verificar a que se le dio clic 
+         y ejecutar las instrucciones necesarias*/
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            // a continuacion se verifica si se dio clic a el submenu4.
+           if (e.getSource()==mi4) {
+                    //a continuacion se cambia a otro frame.
+                    JOptionPane.showMessageDialog(null, "Opcion elegida: Mensajes ");
+                    CerrarPuerto();
+                    SerialArduino obj = new SerialArduino();
+                    obj.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+                    obj.setSize( 590, 150 );
+                    obj.setVisible( true);
+                    dispose();
+                    obj.setResizable(false);
+            }
+           
+           // a continuacion se verifica si se dio clic a el submenu1.
+            if (e.getSource()==mi1) {
+                    //a continuacion se cambia a otro frame.
+                    JOptionPane.showMessageDialog(null, "Opcion elegida: Temperatura y Humedad ");
+                    CerrarPuerto();
+                    Inicio obj = new Inicio();
+                    obj.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+                    obj.setSize( 590, 150 );
+                    obj.setVisible( true);
+                    dispose();
+                    obj.setResizable(false);
+           }
+            
+            // a continuacion se verifica si se dio clic a el submenu3.
+           if (e.getSource()==mi3) {
+               //a continuacion se cambia a otro frame.
+               JOptionPane.showMessageDialog(null, "Opcion elegida: Fecha y Hora ");
+                    CerrarPuerto();
+                    Hora obj = new Hora();
+                    obj.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+                    obj.setSize( 590, 150 );
+                    obj.setVisible( true);
+                    dispose();
+                    obj.setResizable(false);
+           }
+           
+           // a continuacion se verifica si se dio clic al JButton.
+           if (e.getSource()==enviar) {
+               // a continuaion se envia el dato a arduino para ejecutar la temperatura y humedad.
+               EnviarDatos("2");
+               
+           }
+        }
+    }  
+}
