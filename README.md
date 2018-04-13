@@ -25,6 +25,18 @@ Contiene los siguientes archivos:
  
 README.MD: este archivo.
 
+CodigoArduino: Contiene el código  Arduino para la funcionalidad de la práctica.
+
+Codigo_Clase_EnviarMensajes: Contiene el código de Java para la interfaz “Enviar Mensajes”.
+
+Codigo_Clase_HorayFecha: Contiene el código de Java para la interfaz “Hora y Fecha”.
+
+Codigo_Clase_Inicio: Contiene el código de Java para la interfaz “Inicio (enviar saludo)”.
+
+Codigo_Clase_TemperaturayHumedad: Contiene el código de Java para la interfaz “Temperatura y Humedad”.
+
+Codigo_Clase_Main: Contiene el código de Java para la interfaz “Main”.
+
 Evidencia2_utilizacionLinux.png: Foto donde se muestra el código utilizando el sistema operativo Ubuntu.
 
 Evidencia_utilizacionLinux.png: Imagen de captura de pantalla donde se muestra el código utilizando el sistema operativo Ubuntu.
