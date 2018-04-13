@@ -1,0 +1,44 @@
+/*
+Fecha: 12/04/2018
+
+Autora: Ana Evelia Hernandez Aguirre.
+
+Nombre de la practica 3: Interfaz Java con comunicacion con arduino para mostrar: Fecha y hora, temperatura y humedad, y
+Mensajes enviados desde java.
+
+Este programa tiene la funcion de enviar los datos necesarios a arduino mediante el uso de la libreria panamaHitek_Arduino
+para asi saber lo que se va a ejecutar en el codigo de arduino y mostrara en el LCD.
+
+contiene 4 interfazes en las cuales se puede desplazar a cada una de ellas por medio de un menu de opciones, que se
+encuantra en la esquina superior izquierda de las interfasez, las interfasez son:
+
+SerialArduino, en el cual el usuario tecleara un mensaje que al momento de presionar la tecla enter, se enviara
+a el codigo de arduiono el cual lo enviara al LCD.
+
+Inicio, en el cual el usuario tecleara su nombre y al dar enter sera enviado al codigo de arduino el cual enviara un
+mensaje de saludo al LCD mostrando el nombre que se tecleo.
+
+Temperatura, en el cual el usuario dara clic al boton el cual enviara un dato al codigo de arduino el cual enviara los 
+datos de la temperatura y humedad al LCD.
+
+Hora, en el cual el usuario dara clic al boton el cual enviara un dato al codigo de arduino el cual enviara los datos
+de la hora y fecha al LCD.
+*/
+
+// a continuacion se define el pakete donde se encuantra el Main.
+package serial.arduino;
+
+// a continuacion se importa el JFrame.
+import javax.swing.JFrame;
+
+/* a continuacion se define el main el cual contiene una instancia con la cual se ejecutara el Frame 
+principal del programa*/
+public class Main {
+     public static void main( String args[] ){
+      Inicio obj = new Inicio();
+      obj.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE);
+      obj.setSize( 590, 150 ); 
+      obj.setVisible( true); 
+      obj.setResizable(false);
+   }   
+}
