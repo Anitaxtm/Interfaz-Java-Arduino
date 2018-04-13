@@ -1,0 +1,239 @@
+// a continuacion se define el pakete donde se encuantra la clase.
+package serial.arduino;
+
+/* a continuacion se colocan las importaciones necesarias que se ocuparan en esta clase para
+utilizar los diferentes librerias o componentes.*/
+import com.panamahitek.ArduinoException;
+import com.panamahitek.PanamaHitek_Arduino;
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import jssc.SerialPortException;
+
+/*a continuacion se define la clase en la que contendra el codigo necesario para crear la interfaz
+y su funcionalidad. Se le da la funcion de JFrame con el "extends JFrame" */
+public class SerialArduino extends JFrame{
+    //a continuacion se crea la instancia ino para la utilizacion de la libreria panamaHitek_Arduino.
+    PanamaHitek_Arduino ino =new PanamaHitek_Arduino();
+    /*a continuacion se crean los JLabes, JTextField y JPanel que se utilizaran en la interfaz para que el usuario
+    interactue con ellos. Asi como tambien el Container para colocar cada componente*/
+    private JLabel texto1;
+    private JLabel texto2;
+    private JTextField txtf1;;
+    Container contenedor;
+    JPanel panel1,panel2;
+    
+    // a continuacion se crea la variable caracteres inisializada con 0.
+    int caracteres=0;
+    
+    /* a continuacion se crea el JMenuBar, JMenuItem y el JMenu, necesarios para el menu en el cual
+    el usuario navegara a los diferentes Frames*/
+    private JMenuBar mb;
+    private JMenuItem mi1,mi2,mi3,mi4;
+    private JMenu inicio;
+    
+    /* a continuacion se crea el constructor donde tendra todos los componentes creados anteriormente ya inicializados
+    para que se muestren en la interfaz.*/
+    public SerialArduino(){
+        /*a continuacion se muestra la linea de codigo en la cual se envia un mensaje que se mostrara en la parte
+         superior de la interfaz.*/
+        super("Bienvenido");
+        
+        /* a continuacion se inicializan los componentes JPanel, JLabel, JtextFiel, JMenuBar, JMenuItem, JMenu
+        y el Container con sus respectivos nombres ya colocados anteriormente y su funcionalidad.
+         con el ".add" se agregan los componentes ya sea al menu, al contenedor o al JPanel y al final todo se
+        agrega el contenedor*/
+        contenedor = getContentPane();
+        panel1= new JPanel();
+        panel1.setLayout(new FlowLayout(FlowLayout.CENTER,20,5));
+        
+        panel2 = new JPanel();
+        setLayout (new FlowLayout());
+       
+        mb=new JMenuBar();
+        setJMenuBar(mb);
+        
+        inicio = new JMenu("Menu Opciones");
+        mb.add(inicio);
+        
+        mi1=new JMenuItem("Inicio");
+        inicio.add(mi1);
+        mi2=new JMenuItem("Temperatura y Humedad");
+        inicio.add(mi2);
+        mi3=new JMenuItem("Fecha y Hora");
+        inicio.add(mi3);
+        mi4=new JMenuItem("Mensajes");
+        inicio.add(mi4);
+       
+        
+        texto1 = new JLabel("Mensaje que enviara a el LCD ");
+        panel1.add(texto1);
+        
+        texto2 = new JLabel(" ");
+        panel2.add(texto2);
+        
+        
+        
+        txtf1 = new JTextField (18);
+        panel1.add(txtf1);
+        
+        contenedor.add(panel1,BorderLayout.CENTER);
+        contenedor.add(panel2,BorderLayout.CENTER);
+        
+        /* a continuacion se muestra la conexion para la comunicacion con arduino con su respectivo puerto, utilizando la libreria
+        panamaHitek_Arduino*/
+        try {
+            ino.arduinoTX("COM4",9600);
+        } catch (ArduinoException ex) {
+            Logger.getLogger(SerialArduino.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(null,"No se encontro ningun puerto de arduino conectado");
+        }
+        
+        /* a continuacion se crea una instancia de la clase que se encuentra mas adelante "Registro_m" en el cual
+         se hara la funcion del ActionListener y KeyListener para el funcionamiento de la interfaz*/
+        Registro_m manejador = new Registro_m();
+        // a continuacion se muestra la agregacion del KeyListener en el txtf1.
+        txtf1.addKeyListener(manejador);
+        // a continuacion se muestra la agregacion de ActionListener de el menu.
+        mi1.addActionListener(manejador);
+        mi2.addActionListener(manejador);
+        mi3.addActionListener(manejador);
+        mi4.addActionListener(manejador); 
+         
+        
+        
+    }
+    
+    // a continuacion se  muestra el metodo letras el cual contara las letras que caben en el LCD 2X16.
+    public void letras() {
+        /* a continuacion la linea de codigo Indica la cantidad de caracteres disponibles. 
+        En el LCD solo se permite imprimir 32 caracteres.*/
+        caracteres = 32 - txtf1.getText().length();
+        
+        // a continuacion se verifica si la cantidad de caracteres se ha agotado.
+        if (caracteres  == 0) { 
+            //a continuacion se imprime que la cantidad de caracteres disponibles es 0
+            texto2.setText("Caracteres disponibles: 0"); 
+            // a continuacion se declara la variable que guardará el mensaje a enviar
+            String cadena = ""; 
+            // a continuacion se asigna el texto del TextField a la variable cadena
+            cadena = txtf1.getText(); 
+            /* a continuacion se evita que por alguna razón la variable contenga más de
+            32 caracteres, utilizando el substring que crea un string a partir de uno mayor.*/
+            cadena = cadena.substring(0, 32); 
+            // a continuacion se regresa la cadena con 32 caracteres al TextField
+             txtf1.setText(cadena); 
+        } else {
+            /* a continuacion si la cantidad de caracteres disponibles es mayor a 0 solamente se imprimirá la cantidad
+            de caracteres disponibles*/
+            texto2.setText("Caracteres disponibles: " + (caracteres));
+        }
+    }
+
+ 
+    /* a continuacion se muestra el metodo "Enviardatos" que recibira un parametro para asi poder enviar los
+    datos a el codigo de arduino*/
+    private void EnviarDatos(String data) {
+ 
+        // a continuacion utiliazando  la instancia de la libreria de conexion java-arduino se envian los obtenidos.
+        try {
+            ino.sendData(data);
+        } catch (ArduinoException ex) {
+            Logger.getLogger(SerialArduino.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SerialPortException ex) {
+            Logger.getLogger(SerialArduino.class.getName()).log(Level.SEVERE, null, ex);
+        }   
+    }
+    
+    //a continuacion se muestra el metodo "CerrarPuerto" que su funcion es cerrara la conexion de arduino que se esta utilizando.
+    private void CerrarPuerto(){
+        /* a continuacion utiliazando  la instancia de la libreria de conexion java-arduino se cerrara la conexion de
+        arduino que se esta utilizando*/
+        try {
+            ino.killArduinoConnection();
+        } catch (ArduinoException ex) {
+            Logger.getLogger(SerialArduino.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    /* a continuacion se muestra la clase "Registro_m" que su funcion es verificar que boton o tecla se presiono y ejecutar
+    las instrucciones necesarias para cada caso, haciendo todo esto con los metodos implementados.*/
+    private class Registro_m  implements KeyListener, ActionListener {
+        // a continuacion se encuentra el metodo implementado automaticamente, pero en este programa no es necesario este metodo.
+        @Override
+        public void keyTyped(KeyEvent ke) {  
+        }
+        /* a continuacion se muestra el metodo implementado para KeyPressed para verificar que se presiono la tecla
+        enter y asi enviar los datos del textField y limpiar el textfield.*/
+        @Override
+        public void keyPressed(KeyEvent ke) {
+            if(ke.getKeyCode() == KeyEvent.VK_ENTER){ 
+                EnviarDatos("4"+txtf1.getText());
+                txtf1.setText("");
+                letras(); 
+            } 
+        }
+        /* a continuacion se muestra el metodo implementado para KeyReleased para verificar cada tecla
+        presionada y asi mandar a llamr el metodo "letras" en cada tecla presionada.*/
+        @Override
+        public void keyReleased(KeyEvent ke) {
+            letras();
+        }
+        /* a continuacion se muestra el metodo implementado para actionPerformed para verificar a que se le dio clic 
+         y ejecutar las instrucciones necesarias*/
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            // a continuacion se verifica si se dio clic a el submenu1.
+            if (e.getSource()==mi1) {
+                    //a continuacion se cambia a otro frame.
+                    JOptionPane.showMessageDialog(null, "Opcion elegida: Inicio ");
+                    CerrarPuerto();
+                    Inicio obj = new Inicio();
+                    obj.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+                    obj.setSize( 590, 150 );
+                    obj.setVisible( true);
+                    dispose();
+                    obj.setResizable(false);
+            }
+            
+            // a continuacion se verifica si se dio clic a el submenu2
+            if (e.getSource()==mi2) {
+                    //a continuacion se cambia a otro frame.
+                    JOptionPane.showMessageDialog(null, "Opcion elegida: Temperatura y Humedad ");
+                    CerrarPuerto();
+                    Temperatura obj = new Temperatura();
+                    obj.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+                    obj.setSize( 590, 150 );
+                    obj.setVisible( true);
+                    dispose();
+                    obj.setResizable(false);
+           }
+            //a continuacion se verifica si se dio clic a el submenu3
+            if (e.getSource()==mi3) {
+                 //a continuacion se cambia a otro frame.
+               JOptionPane.showMessageDialog(null, "Opcion elegida: Fecha y Hora ");
+                    CerrarPuerto();
+                    Hora obj = new Hora();
+                    obj.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+                    obj.setSize( 590, 150 );
+                    obj.setVisible( true);
+                    dispose();
+                    obj.setResizable(false);
+            }
+        }
+    }   
+}
