@@ -55,5 +55,17 @@ LCD-Inicio2.png: Foto del resultado de mostrar la continuación del saludo en el
 
 LCD-TemperaturayHumedad.png: Foto del resultado de mostrar la temperatura y humedad en el LCD desde la interfaz de java.
 
+Nota importante
+-----------------------
+
+Es importante que en el código al momento de utilizarlo hacer los cambios necesarios, si es que se necesita, por si no se sigue el armado del circuito que se muestra en el diagrama.
+Se necesitara la librería PanamaHitek_arduino-3.0.0.jar que se anexara en los archivos subidos. Solamente se agrega la librería directamente a la carpeta librerías del proyecto de java.
+
+Contacto.
+--------------
+Autora: Ana Evelia Hernández Aguirre.
+Correo electrónico: anitaxtm@hotmail.com
+
+
  
 
