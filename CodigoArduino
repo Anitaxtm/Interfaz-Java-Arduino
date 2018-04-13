@@ -1,0 +1,570 @@
+/*
+ Fecha: 12/04/2018
+
+Autora: Ana Evelia Hernandez Aguirre.
+
+Nombre de la practica 3: Interfaz Java con comunicacion con arduino para mostrar: Fecha y hora, temperatura y humedad, y
+Mensajes enviados desde java.
+
+Descripcion: Practica que utiliza una interfaz en java para que permita navegar por un menu en el cual podra cambiar
+lo que se muestra en el LCD, las opciones a mostrar son : 
+
+Saludo de inicio:
+En la interfaz de java se tecleara el nombre del usuario y al presionar en el teclado enter, hara la accion de enviar
+el nombre a el codigo de arduino y el codigo de arduino hara el proceso de mostrar un saludo con el nombre incluido
+en el LCD.
+
+Temperatura y Humedad:
+En la interfaz de java se le dara clic a un boton, el cual activara en el codigo de arduino el proceso de mostrar
+la temperatura y humedad en el LCD.
+
+Hora y Fecha:
+En la interfaz de java se le dara clic en un boton, el cual activara en el codigo de arduino el proceso de mostrar
+la hora y fecha.
+
+Enviar Mensajes:
+En la interfaz de java  se tecleara el mensaje que se quiera mostrar y al presionar e el teclado enter, hara la accion
+de enviar el mensaje a el codigo de arduino y el codigo de arduino hara el proceso de mostrar el mensaje en el LCD.
+
+Tambien se incluyo la accion de encender un ventilador de 5v cuando la temperatura supere los (31 C) y de caso contrario
+se apagara.
+*/
+// a continuacion se incluye la libreria para la utlizacion del RTC.
+#include <DS1302.h>
+//a continuacin se incluye la libreria para la utilizacion del sensor de temperatura y humedad.
+#include <dht.h>
+// a continuacion se incluye la libreria para la utilizacion del LCD.
+#include <LiquidCrystal.h>
+
+
+//a continuacion se define la variable tipo dht para utilizar el sensor de temperatura y humedad.
+dht DHT;
+//a continuacion se indica el tipo de sensor de temperatura a usar (DHT11) y el pin al que se conecta.
+#define DHT11_PIN 5 
+
+// a continuacion se indica los pines a los que esta el RTC conectado.
+DS1302 rtc(2, 3, 4);
+// a continuacion se  declara la variable tipo Time que se utilizara para la hora y fecha.
+Time t;
+
+//a continuacion se indica los pines a los que se esta conectando el LCD.
+LiquidCrystal lcd(8, 9, 10, 11, 12, 13);
+// a continuacion se declara la variable donde se guardara el mensaje enviado desde java.
+String Mensaje="";
+// a continuacion se declara la variable la cual se utiliza para guardar la temperatura.
+float t1=0;
+// a continuacion se declara la ariable la cual se utilizara para guardar la humedad.
+float h=0;
+// a continuacion se declara la variable para saber si el pin de la temperatura y humedad esta causando algun error.
+int check=-3;
+// a continuacion se declara la variable la cual se utiliza para la navegacion entre: Hora y Fecha, Temperatura y Humedad, Inicio y Mensajes, en el LCD.
+char pestana;
+
+//a continuacion se declara la variable para indicar en que temperatura el ventilador se encendera.
+int umbral = 24 ;  
+// a continuacion se declara la variable que contiene el numero de pin al que esta conectado el ventilador.        
+const int control = 6 ; 
+
+// a continuacion en el void setup, se inicializaran las variables necesarias en entrada o salida de datos.
+void setup(){
+  //a continuacion se inicializa el LCD.
+  lcd.begin(16, 2);
+  //a continuacion se inicializa el pin del ventilador como salida.
+  pinMode(control,  OUTPUT) ;
+  // a continuacion se inicializa el serial que se utiliza desde java como 9600.
+  Serial.begin(9600);
+}
+
+//a continuacion en el loop se pondra el codigo necesario para la funcinalidad de cada componente.
+void loop(){
+  // a continuacion se declara la variable en la cual se guardaran los caracter para formar el mensaje que se envia de java.
+  int caracteres=0;
+  //a continuacion se guarda en la variable pestana el primer caracter del mensaje de java para saber que se mostrara en el LCD.
+  pestana=Decimal_to_ASCII(Serial.read());
+  //a continuacion en el while se realizara mientras el serial contenga algo.
+  while (Serial.available()>0){
+    // a continuacion se guardara en la variable mensaje cada caracter para formar el mensaje completo.
+    Mensaje=Mensaje+Decimal_to_ASCII(Serial.read());
+  }
+
+  //  a continuacion el if que realizara la funcion de mostrar mensajes en el LCD si el primer caracter mandado de java  es 4.
+  if(pestana == '4'){
+    //a continuacion en la variable caracteres se almacena la cantidad total de el mensaje.
+    caracteres=Mensaje.length();
+    // a continuacion el if comparara si la variable caracteres es mayor a 16 para que el mensaje pueda pasar a la siguente fila y pueda completarse.
+    if (caracteres>16){
+      // a continuacion el if verifica si el mensaje es diferente de vacio.
+      if (Mensaje!=""){
+        //a continuacion el LCD se limpia
+        lcd.clear();
+        // a continuacion se imprime el mensaje en el LCD.
+        lcd.print(Mensaje.substring(0,16));
+        // a continuacion se coloca el cursor en al inicio de la segunda fila.
+        lcd.setCursor(0,1);
+        // a continuacion se imprime la continuacion del mensaje en el LCD.
+        lcd.print(Mensaje.substring(16,caracteres));
+      }
+      // a continuacion se muestra lo que se ejecutara si el if no se cumple.
+    }else{
+      // a continuacion  en el if verifica que la variable mensaje no este vacia.
+      if (Mensaje!=""){
+        // a continuacion se limpia la pantalla LCD.
+        lcd.clear();
+        // a continuacion se imprime el mensaje en la pantalla LCD
+        lcd.print(Mensaje);
+      }
+    }
+  }
+
+  // a continuacion el if que realizara la funcion de mostrar el mensaje de bienvenida en el LCD si el primer caracter mandado de java  es 1.
+  if(pestana=='1'){
+    // a continuacion se limpia la pantalla LCD.
+    lcd.clear();
+    // a continuacion se coloca el cursosr en la posicion 0,0 de el LCD.
+    lcd.setCursor(0,0);
+    // a continuacion se imprime el saludo al LCD.
+    lcd.print("Hola, Buen dia!");
+    // a continuacion se coloca el cursor en la posicion 0,1 del LCD.
+    lcd.setCursor(0,1);
+    // a continuacion se imprime en en el LCD el mensaje que se recibio desde java.
+    lcd.print(Mensaje);
+    // a continuacion se le da el tiempo de 5 segundos de espera.
+    delay(5000);
+    // a continuacion  se limpia la pantalla LCD.
+    lcd.clear();
+    // a continuacion se coloca el cursosr en la posicion 0,0.
+    lcd.setCursor(0,0);
+    // a continuacion se imprime el siguiente mensaje en el LCD.
+    lcd.print("Ve a opciones");
+    // a continuacion se coloca el cursor en la posicion 0,1.
+    lcd.setCursor(0,1);
+    // a continuacion se imprime el siguiente mensaje en el LCD.
+    lcd.print("de la interfaz");
+    // a continuacion se le da el tiempo de 7 segundos de espera.
+    delay(7000);
+    // a continuacion se limpa la pantalla LCD.
+    lcd.clear(); 
+  }
+
+  // a continuacion se le da el tiempo de 1 segundo de espera.
+  delay(1000);
+  // a continuacion se inicializa en vacio la variabla Mensaje.
+  Mensaje="";
+
+  //a continuacion el while realizara la funcion de ejecutar y actualizar la temperatura y humedad si el primer caracter mandado de java es 2.
+  while(pestana=='2'){
+    // a continuacion se guarda en la variable check el estado del pin al que esta conectado el sensor de temperatura y humedad.
+    check = DHT.read11(DHT11_PIN);
+    // a continuacion se da un tiempo de espera.
+    delay(200);
+    // a continuacion  se verifica si el valor de la variable check es igual a 0.
+    if(check ==0){  
+      // a continuacion se limpia la pantalla del LCD.
+      lcd.clear();
+      // a continuacion se guarda en la variable h la lectura de la humedad.
+      h= DHT.humidity;
+      // a continuacion se guarda en la variable t1 la lectura de la temperatura.
+      t1= DHT.temperature;            
+      // a continuacion se coloca el cursor en la posicion 0,0 del LCD.
+      lcd.setCursor(0,0);
+      // a continuacion se imprime el mensaje en el LCD.
+      lcd.print("Temp: ");   
+      // a continuacion se coloca el cursor en la posicion (6,0) del lcd.               
+      lcd.setCursor(6,0);
+      // a continuacion se imprime la temperatura en el LCD.
+      lcd.print(t1);
+      // a continuacion se coloca el cursor en la posicion (10,0);
+      lcd.setCursor(10,0);
+      // a continuacion se imprime el mensaje en el LCD.
+      lcd.print("(C)");
+      // a continuacion se coloca el cursor en la posicion (0,1).
+      lcd.setCursor(0,1);
+      // a continuacion se imprime el mensaje en el LCD.
+      lcd.print("Humedad: ");   
+      // a continuacion se coloca el cursor en la posicion (9,0).               
+      lcd.setCursor(9,1);
+      // a continuacion se imprime la humedad en el LCD.
+      lcd.print(h);
+      // a continuacion se coloca el cursor en la posicion (13,1).
+      lcd.setCursor(13,1);
+      // a continuacion se imprime el mensaje en el LCD.
+      lcd.print("%");   
+      // a continuacion se evalua el if si la condicion del if anterior no se cumplio.       
+    } else if(check == -2){
+        // a continuacion se limpia el LCD.
+        lcd.clear();
+        // a continuaion se coloca el cursosr en la posicion 0,0.
+        lcd.setCursor(0,0);
+        // a continuaion se imprime el mensaje en el LCD.
+        lcd.print("DHT11 ERROR!!!");
+        // a continuacion se coloca el cursor en la posicion (0,1).
+        lcd.setCursor(0,1);
+        // a continuacion se imprime el mensaje en el LCD.
+        lcd.print("Sin Lectura");
+        // a continuacion se le da 4 segundos de tiempo de espera.
+        delay(4000);    
+    }
+
+    //  a continuacion se verifica en el if que la temperatura sea mayor o igual a el valor que se le dio al umbral.
+    if (t1 >= umbral){
+      // a continuacion se enciende el ventilador.
+      digitalWrite(control, HIGH);
+      // a continuacion se le da un tiempo de 4 segundos de espera.
+      delay(4000);
+      // a continuacion se ejecutara lo siguiente si la condicion del if anterior no se cumple.
+    }else{
+      // a continuacion se apagara el ventilador
+      digitalWrite(control, LOW);
+      // a continuacion se le da un tiempo de 4 segundos de espera.
+      delay(4000);
+    }
+    // a continuacion se le da el valor 2 a la variable pestana para que pueda seguir actualizandose la temperatura y humedad.
+    pestana='2';
+  }
+
+  //a continuacion el while realizara la funcion de ejecutar y actualizar la fecha y hora si el primer caracter mandado de java es 3.
+  while(pestana=='3'){
+    //delay(3000);
+     //lcd.clear();
+    // a continuacion se guarda la lectura del tiempo en la variable t.
+    t = rtc.getTime();
+    //delay(1000);
+   
+    // a continuacion se coloca el cursor en la posicion (0,1).
+    lcd.setCursor(0,1);  
+    // a continuacion en los siguentes 7 if's se valida cada dia de la semana ( t.dow ) y se imprime dependiendo de el dia actual configurado.
+    if (t.dow == 1) lcd.print("lun");  
+    if (t.dow == 2) lcd.print("mar");
+    if (t.dow == 3) lcd.print("mie");
+    if (t.dow == 4) lcd.print("jue");
+    if (t.dow == 5) lcd.print("vie");
+    if (t.dow == 6) lcd.print("sab");
+    if (t.dow == 7) lcd.print("dom");
+  
+    // a continuacion se  imprime el mensaje en el LCD.
+    lcd.print(",");
+    // a continuacion se imprime el dia del mes en el LCD.
+    lcd.print(t.date, DEC); 
+    // a continuacion se imprime el mensaje en  el LCD.
+    lcd.print("/");  
+    // a continuacion se imprime el mes en el LCD.
+    lcd.print(t.mon);
+    // a continuacion se imprime el mensaje en el LCD.
+    lcd.print("/");
+    // a continuacion se imprime el año en el LCD.
+    lcd.print(t.year, DEC);  
+    //a continuacion se le da 5 segundos de tiempo de demora para presentar los datos en el LCD.
+    delay(5000); 
+  
+    // a continuacion se coloca el cursor en la posicion (0,0).
+    lcd.setCursor(0,0);
+    // a continuacion se imprime el mensaje en el LCD.
+    lcd.print("HORA: ");
+    // a continuacion se imprime la hora en el LCD.
+    lcd.print(t.hour, DEC);  
+    // a continuacion se imprime el mensaje en el LCD.
+    lcd.print(":");
+    // a continuacion se imprime los minutos en el LCD.
+    lcd.print(t.min, DEC); 
+    // a continuacion se le da 5 segundos de tiempo de espera.
+    //delay(3000);
+    // a continuacion se le da el valor de 3 a pestana para que se pueda seguir actualizanso la hora y fecha en el LCD.
+    pestana='3';
+    delay(3000);
+  }
+  //delay(5000);
+}
+
+// a continuacion el siguente metodo recibira un paametro de tipo int el cual convertira  a ASCII para si cpoder obtener el mensaje caracter por caracter.
+char Decimal_to_ASCII(int entrada){
+  char salida=' ';
+  switch(entrada){
+  case 32: 
+  salida=' '; 
+  break; 
+  case 33: 
+  salida='!'; 
+  break; 
+  case 34: 
+  salida='"'; 
+  break; 
+  case 35: 
+  salida='#'; 
+  break; 
+  case 36: 
+  salida='$'; 
+  break; 
+  case 37: 
+  salida='%'; 
+  break; 
+  case 38: 
+  salida='&'; 
+  break; 
+  case 39: 
+  salida=' '; 
+  break; 
+  case 40: 
+  salida='('; 
+  break; 
+  case 41: 
+  salida=')'; 
+  break; 
+  case 42: 
+  salida='*'; 
+  break; 
+  case 43: 
+  salida='+'; 
+  break; 
+  case 44: 
+  salida=','; 
+  break; 
+  case 45: 
+  salida='-'; 
+  break; 
+  case 46: 
+  salida='.'; 
+  break; 
+  case 47: 
+  salida='/'; 
+  break; 
+  case 48: 
+  salida='0'; 
+  break; 
+  case 49: 
+  salida='1'; 
+  break; 
+  case 50: 
+  salida='2'; 
+  break; 
+  case 51: 
+  salida='3'; 
+  break; 
+  case 52: 
+  salida='4'; 
+  break; 
+  case 53: 
+  salida='5'; 
+  break; 
+  case 54: 
+  salida='6'; 
+  break; 
+  case 55: 
+  salida='7'; 
+  break; 
+  case 56: 
+  salida='8'; 
+  break; 
+  case 57: 
+  salida='9'; 
+  break; 
+  case 58: 
+  salida=':'; 
+  break; 
+  case 59: 
+  salida=';'; 
+  break; 
+  case 60: 
+  salida='<'; 
+  break; 
+  case 61: 
+  salida='='; 
+  break; 
+  case 62: 
+  salida='>'; 
+  break; 
+  case 63: 
+  salida='?'; 
+  break; 
+  case 64: 
+  salida='@'; 
+  break; 
+  case 65: 
+  salida='A'; 
+  break; 
+  case 66: 
+  salida='B'; 
+  break; 
+  case 67: 
+  salida='C'; 
+  break; 
+  case 68: 
+  salida='D'; 
+  break; 
+  case 69: 
+  salida='E'; 
+  break; 
+  case 70: 
+  salida='F'; 
+  break; 
+  case 71: 
+  salida='G'; 
+  break; 
+  case 72: 
+  salida='H'; 
+  break; 
+  case 73: 
+  salida='I'; 
+  break; 
+  case 74: 
+  salida='J'; 
+  break; 
+  case 75: 
+  salida='K'; 
+  break; 
+  case 76: 
+  salida='L'; 
+  break; 
+  case 77: 
+  salida='M'; 
+  break; 
+  case 78: 
+  salida='N'; 
+  break; 
+  case 79: 
+  salida='O'; 
+  break; 
+  case 80: 
+  salida='P'; 
+  break; 
+  case 81: 
+  salida='Q'; 
+  break; 
+  case 82: 
+  salida='R'; 
+  break; 
+  case 83: 
+  salida='S'; 
+  break; 
+  case 84: 
+  salida='T'; 
+  break; 
+  case 85: 
+  salida='U'; 
+  break; 
+  case 86: 
+  salida='V'; 
+  break; 
+  case 87: 
+  salida='W'; 
+  break; 
+  case 88: 
+  salida='X'; 
+  break; 
+  case 89: 
+  salida='Y'; 
+  break; 
+  case 90: 
+  salida='Z'; 
+  break; 
+  case 91: 
+  salida='['; 
+  break; 
+  case 92: 
+  salida=' '; 
+  break; 
+  case 93: 
+  salida=']'; 
+  break; 
+  case 94: 
+  salida='^'; 
+  break; 
+  case 95: 
+  salida='_'; 
+  break; 
+  case 96: 
+  salida='`'; 
+  break; 
+  case 97: 
+  salida='a'; 
+  break; 
+  case 98: 
+  salida='b'; 
+  break; 
+  case 99: 
+  salida='c'; 
+  break; 
+  case 100: 
+  salida='d'; 
+  break; 
+  case 101: 
+  salida='e'; 
+  break; 
+  case 102: 
+  salida='f'; 
+  break; 
+  case 103: 
+  salida='g'; 
+  break; 
+  case 104: 
+  salida='h'; 
+  break; 
+  case 105: 
+  salida='i'; 
+  break; 
+  case 106: 
+  salida='j'; 
+  break; 
+  case 107: 
+  salida='k'; 
+  break; 
+  case 108: 
+  salida='l'; 
+  break; 
+  case 109: 
+  salida='m'; 
+  break; 
+  case 110: 
+  salida='n'; 
+  break; 
+  case 111: 
+  salida='o'; 
+  break; 
+  case 112: 
+  salida='p'; 
+  break; 
+  case 113: 
+  salida='q'; 
+  break; 
+  case 114: 
+  salida='r'; 
+  break; 
+  case 115: 
+  salida='s'; 
+  break; 
+  case 116: 
+  salida='t'; 
+  break; 
+  case 117: 
+  salida='u'; 
+  break; 
+  case 118: 
+  salida='v'; 
+  break; 
+  case 119: 
+  salida='w'; 
+  break; 
+  case 120: 
+  salida='x'; 
+  break; 
+  case 121: 
+  salida='y'; 
+  break; 
+  case 122: 
+  salida='z'; 
+  break; 
+  case 123: 
+  salida='{'; 
+  break; 
+  case 124: 
+  salida='|'; 
+  break; 
+  case 125: 
+  salida='}'; 
+  break; 
+  case 126: 
+  salida='~'; 
+  break; 
+  }
+  return salida;
+}
+
