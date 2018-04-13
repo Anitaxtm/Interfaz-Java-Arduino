@@ -37,6 +37,8 @@ Codigo_Clase_TemperaturayHumedad: Contiene el código de Java para la interfaz �
 
 Codigo_Clase_Main: Contiene el código de Java para la interfaz “Main”.
 
+Librería_Conexion_JavaArduino: Contiene el link del repositorio donde se podrá descargar la librería.
+
 Evidencia2_utilizacionLinux.png: Foto donde se muestra el código utilizando el sistema operativo Ubuntu.
 
 Evidencia_utilizacionLinux.png: Imagen de captura de pantalla donde se muestra el código utilizando el sistema operativo Ubuntu.
